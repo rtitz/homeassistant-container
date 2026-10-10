@@ -1,0 +1,46 @@
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    
+    # DYNAMIC CONFIG: Uses host mode on Ubuntu, bridge mode on macOS
+    network_mode: "${HA_NETWORK_MODE}"
+    
+    # DYNAMIC PORT: Only maps the port if network_mode is NOT 'host'
+    ports:
+      - "${HA_PORT}:8123"
+
+    stop_signal: SIGTERM
+    #init: true # Only on Ubuntu (comment out on macOS)
+  
+    # Safe for both systems (ignored if hardware is missing on macOS)
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+    environment:
+      - TZ=Europe/Berlin
+    
+    volumes:
+      - ~/app-data/homeassistant:/config:Z
+      
+    userns_mode: keep-id
+    restart: unless-stopped
+
+    # USB Hardware Access (e.g., Zigbee/Z-Wave coordinators)
+    #
+    # CRITICAL HOST REQUIREMENT (Ubuntu Linux only):
+    # Your host user MUST belong to the 'dialout' group.
+    # Run this command on your Ubuntu terminal and REBOOT the server:
+    #   sudo usermod -aG dialout $USER
+    #devices:
+    #  - /dev/ttyUSB0:/dev/ttyUSB0
+
+    group_add:
+      - dialout
+
+    logging:
+      driver: k8s-file
+      options:
+        max-size: "10mb"
+        max-file: "3"
