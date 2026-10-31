@@ -24,7 +24,7 @@ services:
     volumes:
       - ~/app-data/homeassistant:/config:Z
       
-    userns_mode: keep-id
+    #userns_mode: keep-id
     restart: unless-stopped
 
     # USB Hardware Access (e.g., Zigbee/Z-Wave coordinators)
