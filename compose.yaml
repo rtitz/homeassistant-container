@@ -3,15 +3,10 @@ services:
     container_name: homeassistant
     image: ghcr.io/home-assistant/home-assistant:stable
     
-    # DYNAMIC CONFIG: Uses host mode on Ubuntu, bridge mode on macOS
-    network_mode: "${HA_NETWORK_MODE}"
-    
-    # DYNAMIC PORT: Only maps the port if network_mode is NOT 'host'
-    ports:
-      - "${HA_PORT}:8123"
+    # Native L2 visibility for auto-discovery without root privileges (use 'bridge' mode on macOS, 'host' on Linux)
+    network_mode: host
 
     stop_signal: SIGTERM
-    #init: true # Only on Ubuntu (comment out on macOS)
   
     # Safe for both systems (ignored if hardware is missing on macOS)
     cap_add:
@@ -24,17 +19,7 @@ services:
     volumes:
       - ~/app-data/homeassistant:/config:Z
       
-    #userns_mode: keep-id
     restart: unless-stopped
-
-    # USB Hardware Access (e.g., Zigbee/Z-Wave coordinators)
-    #
-    # CRITICAL HOST REQUIREMENT (Ubuntu Linux only):
-    # Your host user MUST belong to the 'dialout' group.
-    # Run this command on your Ubuntu terminal and REBOOT the server:
-    #   sudo usermod -aG dialout $USER
-    #devices:
-    #  - /dev/ttyUSB0:/dev/ttyUSB0
 
     group_add:
       - dialout
@@ -44,3 +29,15 @@ services:
       options:
         max-size: "10mb"
         max-file: "3"
+
+    # USB Hardware Access (e.g., Zigbee/Z-Wave coordinators)
+    #
+    # CRITICAL HOST REQUIREMENT (Linux only):
+    # Your host user MUST belong to the 'dialout' group.
+    # Run this command on your terminal and REBOOT the server:
+    #   sudo usermod -aG dialout $USER
+    #
+    # INSTRUCTION: To activate, uncomment 'devices:' and ONE hardware line below:
+    #devices:
+    #  - /dev/serial/by-id/usb-ITRIAD_Sonoff_Zigbee_3.0_USB_Dongle_Plus_0001-if00-port0:/dev/ttyUSB0
+    #  - /dev/serial/by-id/usb-Aeotec_Z-Stick_Gen5_Plus_0001-if00-port0:/dev/ttyACM0
